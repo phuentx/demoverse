@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VerticalOps - AI Workspace</title>
+    <title>EduLink - AI Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -172,7 +172,7 @@
         .lightbox.active { opacity: 1; pointer-events: auto; }
         .lightbox img, .lightbox video {
             max-width: 95%;
-            max-height: 95vh;
+            max-height: 90vh;
             border-radius: 4px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             transform: scale(0.95);
@@ -189,6 +189,7 @@
             padding: 12px;
             cursor: pointer;
             transition: background 0.2s;
+            z-index: 10000;
         }
         .lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
@@ -260,13 +261,29 @@
             overflow: hidden;
         }
 
+        /* AI Analysis Card in Post Form */
+        .analysis-card {
+            background: #f0f7ff;
+            border: 1px solid #cce5ff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #004085;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 
 <body class="h-screen flex overflow-hidden selection:bg-[#c2e7ff] selection:text-[#001d35] p-2 gap-3">
 
-    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
-        <button class="lightbox-close"><i data-lucide="x" class="w-8 h-8"></i></button>
+    <div id="lightbox" class="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()"><i data-lucide="x" class="w-8 h-8"></i></button>
         <div id="lightbox-wrapper" class="w-full h-full flex justify-center items-center"></div>
     </div>
 
@@ -276,13 +293,13 @@
     </div>
 
     <div id="compose-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/40 backdrop-blur-[2px] transition-opacity duration-200 modal-enter">
-        <div id="compose-modal" class="modal-content bg-white w-full max-w-[600px] rounded-[28px] shadow-xl p-6 transition-all duration-200 ease-out m-4 relative">
-            <div class="flex justify-between items-center mb-6">
+        <div id="compose-modal" class="modal-content bg-white w-full max-w-[600px] rounded-[28px] shadow-xl p-6 transition-all duration-200 ease-out m-4 relative flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 bg-orange-600 text-white rounded-full flex items-center justify-center font-medium text-sm">JD</div>
+                    <div class="h-10 w-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-medium text-sm">JD</div>
                     <div>
                         <div class="text-[15px] font-bold text-[#1f1f1f]">Jane Doe</div>
-                        <div class="text-xs text-[#444746]">Posting to <span class="font-bold text-[#0b57d0]">Engineering Core</span></div>
+                        <div class="text-xs text-[#444746]">Posting to <span class="font-bold text-[#0b57d0]">Campus Feed</span></div>
                     </div>
                 </div>
                 <button onclick="closeCompose()" class="p-2 hover:bg-[#f0f4f9] rounded-full text-[#444746] transition-colors">
@@ -290,19 +307,31 @@
                 </button>
             </div>
             
-            <div class="mb-4">
-                <textarea id="compose-text" placeholder="What's on your mind? Paste a link or use #hashtags..." class="w-full min-h-[120px] text-[18px] text-[#1f1f1f] placeholder-[#80868b] border-none outline-none resize-none"></textarea>
+            <div class="overflow-y-auto flex-1 min-h-0 pr-2">
+                <textarea id="compose-text" placeholder="Share your knowledge, art, or questions..." class="w-full min-h-[100px] text-[18px] text-[#1f1f1f] placeholder-[#80868b] border-none outline-none resize-none"></textarea>
                 
-                <div id="media-preview-container" class="hidden mt-3 relative inline-block">
-                    <img id="media-preview-img" src="" class="hidden max-h-48 rounded-xl border border-[#e0e2e5]">
-                    <video id="media-preview-video" src="" class="hidden max-h-48 rounded-xl border border-[#e0e2e5]" controls></video>
-                    <div id="scan-indicator" class="hidden absolute inset-0 bg-black/40 flex items-center justify-center rounded-xl backdrop-blur-sm z-10">
-                        <div class="text-white text-xs font-bold flex flex-col items-center gap-2">
-                             <i data-lucide="scan-eye" class="w-6 h-6 animate-pulse"></i>
-                             <span>AI Vision Scanning...</span>
+                <div id="media-preview-container" class="hidden mt-3 relative">
+                    <div class="relative rounded-xl overflow-hidden bg-black/5 border border-[#e0e2e5]">
+                        <img id="media-preview-img" src="" class="hidden w-full max-h-60 object-contain">
+                        <video id="media-preview-video" src="" class="hidden w-full max-h-60" controls></video>
+                        
+                        <div id="scan-indicator" class="hidden absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-10">
+                            <div class="text-white text-xs font-bold flex flex-col items-center gap-2">
+                                 <i data-lucide="scan-eye" class="w-6 h-6 animate-pulse"></i>
+                                 <span>AI Vision Scanning...</span>
+                            </div>
                         </div>
                     </div>
-                    <button onclick="removeMedia()" class="absolute -top-2 -right-2 bg-black text-white rounded-full p-1 shadow-md hover:bg-gray-800 z-20">
+                    
+                    <div id="ai-insight-result" class="hidden analysis-card">
+                        <i data-lucide="sparkles" class="w-4 h-4 mt-0.5 shrink-0"></i>
+                        <div>
+                            <div class="font-bold mb-1">AI Vision Insight</div>
+                            <div id="ai-insight-text" class="leading-relaxed opacity-90"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="removeMedia()" class="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 shadow-md z-20 transition-colors">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -310,7 +339,7 @@
 
             <input type="file" id="media-input" class="hidden" accept="image/*,video/*" onchange="handleFileSelect(event)">
 
-            <div class="flex items-center justify-between pt-2 border-t border-[#f0f0f0]">
+            <div class="flex items-center justify-between pt-4 border-t border-[#f0f0f0] mt-2 shrink-0">
                 <div class="flex gap-1">
                     <button onclick="document.getElementById('media-input').click()" class="p-2 hover:bg-[#f0f4f9] rounded-full text-[#0b57d0]" title="Add Media">
                         <i data-lucide="image" class="w-5 h-5"></i>
@@ -367,16 +396,16 @@
     <aside class="w-[280px] flex flex-col shrink-0 p-2 gap-2 pl-4 hidden md:flex">
         <div class="h-16 flex items-center gap-3 pl-2 mb-2">
             <div class="text-[#0b57d0]">
-                <i data-lucide="hexagon" class="w-8 h-8 fill-[#0b57d0] stroke-none"></i>
+                <i data-lucide="graduation-cap" class="w-8 h-8 fill-[#0b57d0] stroke-none"></i>
             </div>
-            <h1 class="text-[22px] google-font text-[#444746]">Vertical<span class="font-bold text-[#1f1f1f]">Ops</span></h1>
+            <h1 class="text-[22px] google-font text-[#444746]">Edu<span class="font-bold text-[#1f1f1f]">Link</span></h1>
         </div>
         <button onclick="openCompose()" class="w-full h-14 flex items-center gap-4 px-5 bg-[#c2e7ff] text-[#001d35] rounded-[16px] mb-6 shadow-sm hover:shadow-md hover:bg-[#b3dfff] transition-all group">
             <i data-lucide="pencil" class="w-6 h-6"></i>
             <span class="text-[15px] font-medium">Compose</span>
         </button>
         <nav class="space-y-1">
-            <a href="#" onclick="clearFilter(); return false;" class="flex items-center gap-5 px-5 py-3.5 bg-[#d3e3fd] text-[#001d35] rounded-full font-semibold transition-colors"><i data-lucide="layout-grid" class="w-5 h-5"></i> Feed</a>
+            <a href="#" onclick="clearFilter(); return false;" class="flex items-center gap-5 px-5 py-3.5 bg-[#d3e3fd] text-[#001d35] rounded-full font-semibold transition-colors"><i data-lucide="layout-grid" class="w-5 h-5"></i> Campus Feed</a>
             <a href="#" class="flex items-center gap-5 px-5 py-3.5 text-[#444746] hover:bg-[#e1e3e1] rounded-full font-medium transition-colors"><i data-lucide="hash" class="w-5 h-5"></i> Topics</a>
             <a href="#" class="flex items-center gap-5 px-5 py-3.5 text-[#444746] hover:bg-[#e1e3e1] rounded-full font-medium transition-colors"><i data-lucide="notebook" class="w-5 h-5"></i> Notes</a>
             <a href="#" class="flex items-center gap-5 px-5 py-3.5 text-[#444746] hover:bg-[#e1e3e1] rounded-full font-medium transition-colors"><i data-lucide="user" class="w-5 h-5"></i> Profile</a>
@@ -390,12 +419,12 @@
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i data-lucide="search" class="w-5 h-5 text-[#444746] group-focus-within:text-[#0b57d0] transition-colors"></i>
                 </div>
-                <input type="text" placeholder="Search in feed" id="feed-search" onkeyup="filterFeed(this.value)" class="w-full bg-[#f0f4f9] text-[#1f1f1f] border border-transparent rounded-full py-3.5 pl-12 pr-6 text-[16px] hover:bg-[#e9eef6] hover:shadow-sm focus:bg-[#e9eef6] focus:border-[#0b57d0]/30 focus:shadow-md transition-all duration-200 outline-none placeholder-[#444746]/80">
+                <input type="text" placeholder="Search in campus feed" id="feed-search" onkeyup="filterFeed(this.value)" class="w-full bg-[#f0f4f9] text-[#1f1f1f] border border-transparent rounded-full py-3.5 pl-12 pr-6 text-[16px] hover:bg-[#e9eef6] hover:shadow-sm focus:bg-[#e9eef6] focus:border-[#0b57d0]/30 focus:shadow-md transition-all duration-200 outline-none placeholder-[#444746]/80">
             </div>
             <div class="flex items-center gap-2 pl-4">
                 <button class="p-2.5 hover:bg-[#f0f4f9] rounded-full text-[#444746] transition-colors"><i data-lucide="settings-2" class="w-6 h-6"></i></button>
                 <button class="p-2.5 hover:bg-[#f0f4f9] rounded-full text-[#444746] transition-colors"><i data-lucide="bell" class="w-6 h-6"></i></button>
-                <div class="ml-2 h-10 w-10 bg-orange-600 text-white rounded-full flex items-center justify-center font-medium text-sm border-2 border-white ring-1 ring-[#e0e2e5]">JD</div>
+                <div class="ml-2 h-10 w-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-medium text-sm border-2 border-white ring-1 ring-[#e0e2e5]">JD</div>
             </div>
         </header>
 
@@ -412,19 +441,17 @@
                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-11 h-11 rounded-full bg-[#f0f4f9]">
                             <div>
                                 <h3 class="font-bold text-[#1f1f1f] text-[16px] google-font">Alex Chen</h3>
-                                <span class="text-xs text-[#444746] font-medium">Senior Engineer • 2h</span>
+                                <span class="text-xs text-[#444746] font-medium">Science Department • 2h</span>
                             </div>
                         </div>
                         <button class="p-2 hover:bg-[#e0e2e5] rounded-full text-[#444746] opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
                     </div>
                     <div class="post-content mt-3">
-                        <p class="text-[#1f1f1f] text-[16px] leading-7 mb-5">Refactored the authentication middleware. Latency dropped by ~40ms. Code snippet below. 🚀 <span class="hashtag" onclick="filterFeed('#Backend')">#Backend</span> <span class="hashtag" onclick="filterFeed('#NodeJS')">#NodeJS</span></p>
+                        <p class="text-[#1f1f1f] text-[16px] leading-7 mb-5">Working on the new physics simulation engine. The momentum conservation logic is finally stable! 🚀 <span class="hashtag" onclick="filterFeed('#Physics')">#Physics</span> <span class="hashtag" onclick="filterFeed('#Simulation')">#Simulation</span></p>
                         <div class="bg-[#282a2e] rounded-[18px] overflow-hidden shadow-inner border border-[#444746] mb-2" data-type="code-block" data-lang="javascript">
                             <div class="px-4 py-2.5 bg-[#1f1f1f] border-b border-[#444746] flex gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div>
-<pre class="m-0 border-none rounded-none text-sm leading-relaxed"><span class="code-keyword">async function</span> <span class="code-function">verifySession</span>(token) {
-  <span class="code-keyword">const</span> cached = <span class="code-keyword">await</span> redis.<span class="code-function">get</span>(token);
-  <span class="code-keyword">if</span> (cached) <span class="code-keyword">return</span> JSON.<span class="code-function">parse</span>(cached);
-  <span class="code-keyword">return</span> jwt.<span class="code-function">verify</span>(token, SECRET);
+<pre class="m-0 border-none rounded-none text-sm leading-relaxed"><span class="code-keyword">function</span> <span class="code-function">calculateMomentum</span>(mass, velocity) {
+  <span class="code-keyword">return</span> mass * velocity;
 }</pre>
                         </div>
                     </div>
@@ -439,43 +466,6 @@
                     <div class="flex gap-2 transform translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
                         <button onclick="pinPost('post-1', 'Alex Chen')" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#e8f0fe] hover:bg-[#d3e3fd] text-[#0b57d0] text-xs font-bold transition-colors"><i data-lucide="sparkles" class="w-4 h-4 fill-[#0b57d0] stroke-none"></i> AI CONTEXT</button>
                         <button onclick="openNotebook('post-1', 'Alex Chen')" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#f0f4f9] hover:bg-[#e0e2e5] text-[#1f1f1f] text-xs font-bold transition-colors"><i data-lucide="notebook-pen" class="w-4 h-4"></i> NOTE</button>
-                    </div>
-                </div>
-            </article>
-
-            <article class="post-card rounded-[24px] p-0 group overflow-hidden cursor-default" id="post-2">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex gap-4">
-                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" class="w-11 h-11 rounded-full bg-[#f0f4f9]">
-                            <div>
-                                <h3 class="font-bold text-[#1f1f1f] text-[16px] google-font">Sarah Miller</h3>
-                                <span class="text-xs text-[#444746] font-medium">Product Designer • 4h</span>
-                            </div>
-                        </div>
-                        <button class="p-2 hover:bg-[#e0e2e5] rounded-full text-[#444746] opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="post-content mt-3">
-                        <p class="text-[#1f1f1f] text-[16px] leading-7 mb-5">New dark mode palette concepts. Testing contrast ratios on mobile viewports. Which one do you prefer? 🎨 <span class="hashtag" onclick="filterFeed('#Design')">#Design</span> <span class="hashtag" onclick="filterFeed('#UX')">#UX</span></p>
-                        <span class="hidden" data-ai-context>Image Description: A side-by-side comparison of two dark mode UI variants. Variant A is darker, Variant B is lighter.</span>
-                        <div class="bg-[#0f172a] rounded-[20px] h-52 flex items-center justify-center relative overflow-hidden border border-[#1e293b] shadow-sm cursor-pointer" onclick="openLightbox('<div class=&quot;grid grid-cols-2 gap-6 w-3/4&quot;><div class=&quot;h-24 bg-[#1e293b] rounded-2xl border border-white/10 shadow-lg flex items-center justify-center text-white/50 text-sm font-medium hover:border-white/40 transition-colors hover:bg-[#273549]&quot;>Variant A</div><div class=&quot;h-24 bg-[#334155] rounded-2xl border border-white/10 shadow-lg flex items-center justify-center text-white/50 text-sm font-medium hover:border-white/40 transition-colors hover:bg-[#405169]&quot;>Variant B</div></div>')">
-                             <div class="grid grid-cols-2 gap-6 w-3/4">
-                                <div class="h-24 bg-[#1e293b] rounded-2xl border border-white/10 shadow-lg flex items-center justify-center text-white/50 text-sm font-medium hover:border-white/40 transition-colors hover:bg-[#273549]">Variant A</div>
-                                <div class="h-24 bg-[#334155] rounded-2xl border border-white/10 shadow-lg flex items-center justify-center text-white/50 text-sm font-medium hover:border-white/40 transition-colors hover:bg-[#405169]">Variant B</div>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="border-t border-[#f5f5f5] w-full"></div>
-                <div class="px-6 py-3 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-opacity">
-                    <div class="flex gap-2">
-                        <button class="flex items-center gap-2 px-4 py-2.5 rounded-full hover:bg-[#ffebee] hover:text-[#d93025] text-[#444746] text-sm font-bold transition-colors"><i data-lucide="heart" class="w-5 h-5"></i> 128</button>
-                        <button class="flex items-center gap-2 px-4 py-2.5 rounded-full hover:bg-[#e8f0fe] hover:text-[#0b57d0] text-[#444746] text-sm font-bold transition-colors"><i data-lucide="message-circle" class="w-5 h-5"></i> 42</button>
-                        <button class="p-2.5 rounded-full hover:bg-[#e8f0fe] hover:text-[#0b57d0] text-[#444746] transition-colors" title="Share"><i data-lucide="share-2" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="flex gap-2 transform translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
-                        <button onclick="pinPost('post-2', 'Sarah Miller')" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#e8f0fe] hover:bg-[#d3e3fd] text-[#0b57d0] text-xs font-bold transition-colors"><i data-lucide="sparkles" class="w-4 h-4 fill-[#0b57d0] stroke-none"></i> AI CONTEXT</button>
-                        <button onclick="openNotebook('post-2', 'Sarah Miller')" class="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#f0f4f9] hover:bg-[#e0e2e5] text-[#1f1f1f] text-xs font-bold transition-colors"><i data-lucide="notebook-pen" class="w-4 h-4"></i> NOTE</button>
                     </div>
                 </div>
             </article>
@@ -518,7 +508,7 @@
                             <i data-lucide="sparkles" class="w-5 h-5 text-[#0b57d0]"></i>
                         </div>
                         <div class="text-[15px] text-[#1f1f1f] leading-relaxed bg-[#f0f4f9] p-4 rounded-[20px] rounded-tl-none">
-                            <p>Hi! I'm ready to help. Hover over a post and click <span class="font-bold text-[#0b57d0]">AI Context</span> to discuss it. I can now "see" objects and "read" text in your uploaded images!</p>
+                            <p>Hi! I'm Newton. I can analyze images and videos in the feed. Hover over a post and click <span class="font-bold text-[#0b57d0]">AI Context</span> to chat about it!</p>
                         </div>
                     </div>
                 </div>
@@ -535,11 +525,12 @@
             <div id="view-trend" class="hidden flex-col h-full fade-in bg-white p-6">
                 <div class="flex items-center gap-2 mb-6">
                     <i data-lucide="bar-chart-2" class="w-5 h-5 text-[#444746]"></i>
-                    <h2 class="text-lg google-font font-medium text-[#1f1f1f]">Internal Trends</h2>
+                    <h2 class="text-lg google-font font-medium text-[#1f1f1f]">Campus Trends</h2>
                 </div>
                 <div class="flex flex-wrap gap-2 mb-8">
-                    <span class="px-4 py-2 bg-[#e0f2ff] text-[#001d35] rounded-xl text-xs font-bold border border-[#c2e7ff] cursor-pointer" onclick="filterFeed('#React')">#React</span>
-                    <span class="px-4 py-2 bg-[#f0f4f9] text-[#1f1f1f] rounded-xl text-xs font-bold cursor-pointer" onclick="filterFeed('#UX/UI')">#UX/UI</span>
+                    <span class="px-4 py-2 bg-[#e0f2ff] text-[#001d35] rounded-xl text-xs font-bold border border-[#c2e7ff] cursor-pointer" onclick="filterFeed('#Physics')">#Physics</span>
+                    <span class="px-4 py-2 bg-[#f0f4f9] text-[#1f1f1f] rounded-xl text-xs font-bold cursor-pointer" onclick="filterFeed('#Art')">#Art</span>
+                    <span class="px-4 py-2 bg-[#f0f4f9] text-[#1f1f1f] rounded-xl text-xs font-bold cursor-pointer" onclick="filterFeed('#Science')">#Science</span>
                 </div>
             </div>
         </div>
@@ -552,6 +543,7 @@
         let currentMediaType = null;
         let classifier;
         let mediaVisionLog = ""; // To store the analysis result globally during the post process
+        let isProcessingMedia = false;
 
         // --- INIT ML5 ---
         function setupClassifier() {
@@ -586,7 +578,7 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3000);
         }
 
-        // --- CONTENT MODERATION (UPDATED FOR MEDIA) ---
+        // --- CONTENT MODERATION ---
         async function checkContentSafety(text, visionLog) {
             let combinedText = text || "";
             if (visionLog) {
@@ -595,13 +587,15 @@
 
             if (!combinedText.trim()) return true;
             
-            const prompt = `You are a content moderation AI. 
+            const prompt = `You are a content moderation AI for an educational platform called EduLink. 
             Check the following text and vision logs for:
-            1. NSFW/18+ content (sexual, violent, illegal).
-            2. "Brainrot" or "Gen Alpha" slang used excessively or nonsensically (e.g., skibidi, gyatt, rizz, sigma, fanum tax, ohio).
-            3. Explicit mention of "AI generated video" or "deepfake" in the vision log or text.
+            1. NSFW/18+ content (pornography, sexual violence).
+            2. "Brainrot" or inappropriate slang (e.g., skibidi, gyatt, rizz, fanum tax, ohio) used in a non-educational way.
+            3. Hate speech or bullying.
             
-            If the content contains ANY of these, reply exactly "BLOCK".
+            Allow: Science, Art, Anime (SFW), Geography, Culture, General discussion.
+            
+            If the content is UNSAFE, reply exactly "BLOCK".
             Otherwise, reply "SAFE".
             
             Content: "${combinedText}"`;
@@ -651,31 +645,30 @@
             }
         }
 
-        // --- LIGHTBOX (NOW FORCED FULL SCREEN) ---
+        // --- LIGHTBOX (YOUTUBE STYLE FULLSCREEN) ---
         function openLightbox(srcOrContent) {
             const lightbox = document.getElementById('lightbox');
             const wrapper = document.getElementById('lightbox-wrapper');
             wrapper.innerHTML = ""; 
 
             if(srcOrContent.includes('<div')) {
-                // Handle complex DIV content (like the dark mode concept card)
                 const div = document.createElement('div');
                 div.innerHTML = srcOrContent;
                 div.className = "w-full flex justify-center";
                 wrapper.appendChild(div);
             } 
             else if (srcOrContent.startsWith('data:video') || srcOrContent.endsWith('.mp4')) {
+                // Video Fullscreen Logic
                 const video = document.createElement('video');
                 video.src = srcOrContent;
                 video.controls = true;
                 video.autoplay = true;
-                video.className = "max-w-[95%] max-h-[90vh] rounded-lg shadow-2xl bg-black";
+                video.className = "w-full h-full max-w-[90vw] max-h-[90vh] bg-black shadow-2xl outline-none";
                 wrapper.appendChild(video);
             }
             else {
                 const img = document.createElement('img');
                 img.src = srcOrContent;
-                img.className = "max-w-[95%] max-h-[95vh] rounded-lg shadow-2xl";
                 wrapper.appendChild(img);
             }
             lightbox.classList.add('active');
@@ -689,7 +682,7 @@
             lightbox.classList.remove('active');
         }
 
-        // --- COMPOSE ---
+        // --- COMPOSE & MEDIA HANDLING ---
         function insertCodeBlock() {
             const textarea = document.getElementById('compose-text');
             const cursorStart = textarea.selectionStart;
@@ -713,33 +706,71 @@
             const overlay = document.getElementById('compose-overlay');
             overlay.classList.remove('modal-active');
             overlay.classList.add('modal-enter');
+            removeMedia();
         }
         document.getElementById('compose-overlay').addEventListener('click', function(e) { if (e.target === this) closeCompose(); });
 
-
-        function handleFileSelect(event) {
+        async function handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     currentMedia = e.target.result;
                     currentMediaType = file.type.startsWith('video') ? 'video' : 'image';
                     const container = document.getElementById('media-preview-container');
                     const imgPreview = document.getElementById('media-preview-img');
                     const vidPreview = document.getElementById('media-preview-video');
+                    const scanIndicator = document.getElementById('scan-indicator');
+                    
+                    container.classList.remove('hidden');
+                    scanIndicator.classList.remove('hidden');
+                    
                     if (currentMediaType === 'video') {
                         imgPreview.classList.add('hidden');
                         vidPreview.src = currentMedia;
                         vidPreview.classList.remove('hidden');
+                        
+                        // Wait for metadata to load to grab a frame
+                        vidPreview.onloadeddata = async () => {
+                            vidPreview.currentTime = Math.min(1.0, vidPreview.duration / 2); // Seek to a bit in
+                        };
+                        vidPreview.onseeked = async () => {
+                             await performPreAnalysis(vidPreview);
+                        }
                     } else {
                         vidPreview.classList.add('hidden');
                         imgPreview.src = currentMedia;
                         imgPreview.classList.remove('hidden');
+                        // Small delay for image render
+                        setTimeout(async () => { await performPreAnalysis(imgPreview); }, 100);
                     }
-                    container.classList.remove('hidden');
                 };
                 reader.readAsDataURL(file);
             }
+        }
+
+        async function performPreAnalysis(element) {
+            mediaVisionLog = await analyzeMedia(element);
+            
+            // Generate user-friendly description using AI
+            const insightText = document.getElementById('ai-insight-text');
+            const insightCard = document.getElementById('ai-insight-result');
+            const scanIndicator = document.getElementById('scan-indicator');
+            
+            const prompt = `Describe what is in this media based on these computer vision logs. Keep it short (1 sentence). 
+            Logs: ${mediaVisionLog}`;
+            
+            try {
+                 const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}?model=openai`);
+                 const description = await response.text();
+                 insightText.innerText = description.trim();
+                 insightCard.classList.remove('hidden');
+            } catch(e) {
+                insightText.innerText = "Analyzed media content.";
+                insightCard.classList.remove('hidden');
+            }
+            
+            scanIndicator.classList.add('hidden');
         }
 
         function removeMedia() {
@@ -747,6 +778,7 @@
             currentMediaType = null;
             mediaVisionLog = "";
             document.getElementById('media-preview-container').classList.add('hidden');
+            document.getElementById('ai-insight-result').classList.add('hidden');
             document.getElementById('media-input').value = "";
         }
 
@@ -770,7 +802,7 @@
                     const results = await classifier.predict(imageToAnalyze);
                     if (results && results.length > 0) {
                         const objects = results.map(r => r.label).join(", ");
-                        log += `[Visual Objects: ${objects}] `;
+                        log += `[Visual Objects detected: ${objects}] `;
                     }
                 } catch (e) { console.log("ML5 Error", e); }
             }
@@ -778,13 +810,13 @@
                 const { data: { text } } = await Tesseract.recognize(imageToAnalyze.src, 'eng');
                 if (text && text.trim().length > 0) {
                      const cleanText = text.replace(/\n/g, ' ').substring(0, 150); 
-                     log += `[OCR Text: "${cleanText}..."] `;
+                     log += `[Text in Media (OCR): "${cleanText}..."] `;
                 }
             } catch (e) { console.log("OCR Error", e); }
 
-            // Mocked audio/video transcription/summary for demo context
+            // Simulated Audio/Speech analysis for the 5-frame logic request
             if (element.tagName === 'VIDEO') {
-                log += `[Mocked Audio/Dialogue: User speaks about project deadlines and team collaboration.]`;
+                log += `[Audio Transcript: '...explaining the core concepts shown in the video...']`;
             }
 
             return log;
@@ -802,23 +834,15 @@
             btn.innerHTML = `<div class="scanning-loader"></div> Processing`;
             btn.disabled = true;
 
-            // 0. MEDIA ANALYSIS
-            mediaVisionLog = "";
-            if (currentMedia) {
-                document.getElementById('scan-indicator').classList.remove('hidden'); 
-                const mediaEl = currentMediaType === 'video' ? document.getElementById('media-preview-video') : document.getElementById('media-preview-img');
-                mediaVisionLog = await analyzeMedia(mediaEl);
-            }
-
-            // 1. SAFETY CHECK (MODERATION)
+            // 1. SAFETY CHECK
+            // We reuse the vision log already generated in preview
             const isSafe = await checkContentSafety(textRaw, mediaVisionLog);
-            document.getElementById('scan-indicator').classList.add('hidden'); 
 
             if (!isSafe) {
-                showToast("Post blocked: Detected prohibited content (AI video, slang, or unsafe media).", true);
+                showToast("Post blocked: Unsafe content detected.", true);
                 btn.innerHTML = originalBtn;
                 btn.disabled = false;
-                removeMedia(); // Clear media after block
+                removeMedia(); 
                 return;
             }
 
@@ -828,18 +852,19 @@
             
             if (currentMedia) {
                 if (currentMediaType === 'video') {
+                    // Video player logic: Custom control to play inline, then fullscreen option
                     mediaHTML = `
-                    <div class="mt-4 rounded-[20px] overflow-hidden border border-[#e0e2e5] shadow-sm cursor-pointer relative group">
-                        <video src="${currentMedia}" class="w-full h-auto max-h-[400px]"></video>
-                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:bg-black/10 transition-colors" onclick="openLightbox('${currentMedia}')">
-                            <div class="bg-black/50 p-3 rounded-full text-white"><i data-lucide="play" class="w-6 h-6 fill-white"></i></div>
+                    <div class="mt-4 rounded-[20px] overflow-hidden border border-[#e0e2e5] shadow-sm relative group bg-black">
+                        <video src="${currentMedia}" class="w-full h-auto max-h-[450px]" controls></video>
+                        <div class="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full cursor-pointer hover:bg-black/80 transition-colors" onclick="openLightbox('${currentMedia}')" title="Maximize">
+                            <i data-lucide="maximize-2" class="w-4 h-4"></i>
                         </div>
                         <span class="hidden" data-ai-context>Video Analysis Log: ${mediaVisionLog}</span>
                     </div>`;
                 } else {
                     mediaHTML = `
                     <div class="mt-4 rounded-[20px] overflow-hidden border border-[#e0e2e5] shadow-sm cursor-pointer" onclick="openLightbox('${currentMedia}')">
-                        <img src="${currentMedia}" class="w-full h-auto object-cover max-h-[400px]" alt="User uploaded image">
+                        <img src="${currentMedia}" class="w-full h-auto object-cover max-h-[450px]" alt="User uploaded image">
                         <span class="hidden" data-ai-context>Image Analysis Log: ${mediaVisionLog}</span>
                     </div>`;
                 }
@@ -854,10 +879,10 @@
             if (urls) {
                 const uniqueUrls = [...new Set(urls)];
                 uniqueUrls.forEach(u => {
-                    displayText = displayText.replace(u, ''); // Strip link from body
+                    displayText = displayText.replace(u, ''); 
                 });
                 
-                // Fetch metadata (Mocked in background for demo simplicity)
+                // Mock metadata fetch
                 const metaResults = await Promise.all(uniqueUrls.map(url => fetchLinkMetadata(url)));
 
                 metaResults.forEach((meta, index) => {
@@ -867,7 +892,7 @@
 
                     let title = meta?.title || domain;
                     let desc = meta?.description || "Click to view content.";
-                    let img = meta?.image?.url || "https://placehold.co/600x300/e0e2e5/1f1f1f?text=No+Image";
+                    let img = meta?.image?.url || "https://placehold.co/600x300/e0e2e5/1f1f1f?text=Link+Preview";
 
                     linkPreviewHTML += `
                     <a href="${originalUrl}" target="_blank" class="link-preview">
@@ -923,10 +948,10 @@
                 <div class="p-6"> 
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex gap-4">
-                            <div class="h-11 w-11 bg-orange-600 text-white rounded-full flex items-center justify-center font-medium text-sm">JD</div>
+                            <div class="h-11 w-11 bg-indigo-600 text-white rounded-full flex items-center justify-center font-medium text-sm">JD</div>
                             <div>
                                 <h3 class="font-bold text-[#1f1f1f] text-[16px] google-font">${author}</h3>
-                                <span class="text-xs text-[#444746] font-medium">Engineering Core • Just now</span>
+                                <span class="text-xs text-[#444746] font-medium">Campus Feed • Just now</span>
                             </div>
                         </div>
                         <button class="p-2 hover:bg-[#e0e2e5] rounded-full text-[#444746] opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
@@ -957,26 +982,24 @@
             btn.innerHTML = originalBtn;
             btn.disabled = false;
             closeCompose();
-            showToast("Post Published!");
+            showToast("Posted to Campus Feed!");
             lucide.createIcons();
         }
 
         // --- LINK METADATA MOCK ---
         async function fetchLinkMetadata(url) {
             try {
-                // Mock API call since actual microlink API requires a key
-                console.log(`Mocking metadata fetch for: ${url}`);
+                // Mock API call 
                 await new Promise(r => setTimeout(r, 200)); 
                 return {
-                    title: "Internal Microservices Documentation",
-                    description: "Documentation on the latest API Gateway changes for Q4 deployment.",
-                    image: { url: "https://placehold.co/600x300/34d399/ffffff?text=Microservices+API" },
-                    logo: { url: "https://placehold.co/40x40/0b57d0/ffffff?text=API" }
+                    title: "Educational Resource",
+                    description: "External content linked by the student.",
+                    image: { url: "https://placehold.co/600x300/34d399/ffffff?text=EduLink+Resource" },
+                    logo: { url: "https://placehold.co/40x40/0b57d0/ffffff?text=EL" }
                 };
             } catch (e) { console.log("Metadata Fetch Failed", e); }
             return null;
         }
-
 
         // --- NOTEBOOK ---
         function openNotebook(postId, authorName) {
@@ -1037,7 +1060,7 @@
             setTimeout(() => { closeNotebook(); }, 800);
         }
 
-        // --- AI LOGIC ---
+        // --- AI NOTE GENERATION ---
         async function generateAiNotes() {
             const sourceContent = getSmartContent(document.getElementById('notebook-source-content'));
             const textarea = document.getElementById('note-body');
@@ -1049,14 +1072,18 @@
             btn.disabled = true;
             textarea.parentElement.classList.add('ai-processing');
 
-            const prompt = `You are a sophisticated research assistant. Analyze the content below (including text and computer vision logs).
+            const prompt = `You are a sophisticated research assistant for EduLink. Analyze the content below (including text and computer vision logs).
+            
             Produce a high-quality Markdown note with the following sections:
             ### 1. Visual Scene Analysis
-            (Synthesize the [Visual Data] logs, including object detection and OCR, into a natural description. If the log contains [Mocked Audio/Dialogue], also summarize the spoken content. If no visual/audio data, state "No visual/audio context provided.")
+            (Synthesize the [Visual Data] logs. If it's a video, assume the logs represent 5 frames of content. Summarize the visual narrative.)
+            
             ### 2. Core Context
             (Summarize the main textual message and technical details.)
+            
             ### 3. Actionable Insights
             (Bullet points on what to do next or key takeaways.)
+            
             Content to Analyze: ${sourceContent}`;
 
             try {
@@ -1150,7 +1177,7 @@
             switchMode('ai');
             const postElement = document.getElementById(postId);
             const richContent = getSmartContent(postElement);
-            currentContext = `System Prompt: You are a helpful assistant with vision capabilities. Context: User is viewing a post by ${authorName}. Post Data: ${richContent}. Instructions: Describe media if present in logs. Answer questions concisely.`;
+            currentContext = `System Prompt: You are Newton, a helpful educational assistant for EduLink. Context: User is viewing a post by ${authorName}. Post Data: ${richContent}. Instructions: Describe media if present in logs. Answer questions concisely.`;
             document.getElementById('ai-context-chip').classList.remove('hidden');
             document.getElementById('ai-context-text').innerText = `Post by ${authorName}`;
             addMessage(`I'm referencing ${authorName}'s post. I can see the content. Ask me anything!`, false);
